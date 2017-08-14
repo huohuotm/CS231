@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import numpy as np
 import matplotlib.pyplot as plt
-from past.builtins import xrange
+#from past.builtins import xrange
 
 class TwoLayerNet(object):
   """
@@ -41,6 +41,7 @@ class TwoLayerNet(object):
     self.params['W2'] = std * np.random.randn(hidden_size, output_size)
     self.params['b2'] = np.zeros(output_size)
 
+
   def loss(self, X, y=None, reg=0.0):
     """
     Compute the loss and gradients for a two layer fully connected neural
@@ -68,15 +69,16 @@ class TwoLayerNet(object):
     W1, b1 = self.params['W1'], self.params['b1']
     W2, b2 = self.params['W2'], self.params['b2']
     N, D = X.shape
-
     # Compute the forward pass
-    scores = None
+    #scores = None
     #############################################################################
     # TODO: Perform the forward pass, computing the class scores for the input. #
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    pass
+    Z1 = np.dot(X, W1)+b1
+    l1 = np.maximum(Z1, 0.0)    #activation function using relu
+    scores = np.dot(l1, W2) + b2
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -93,7 +95,26 @@ class TwoLayerNet(object):
     # in the variable loss, which should be a scalar. Use the Softmax           #
     # classifier loss.                                                          #
     #############################################################################
-    pass
+    # scores -= np.reshape(np.max(scores, 1),(-1,1))
+    # scores_exp = np.exp(scores)
+    # y_scores_exp = scores_exp[np.arange(N), y]
+    # scores_exp_sum = np.sum(scores_exp,1)
+
+    # data_loss = np.sum(-np.log(y_scores_exp*1./scores_exp_sum))/N 
+    # #reg_loss = 0.5*reg*(np.sum(W1*W1)+ np.sum(W2*W2))
+    # reg_loss = 0.5*reg*np.sum(W1*W1) + 0.5*reg*np.sum(W2*W2)
+    # loss = data_loss+reg_loss
+
+    #scores_normalize -= np.reshape(np.max(scores, 1),(-1,1))
+    exp_scores = np.exp(scores)
+    probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True) # [N x C]
+
+    # average cross-entropy loss and regularization
+    corect_logprobs = -np.log(probs[range(N),y])
+    data_loss = np.sum(corect_logprobs)/N
+    reg_loss = 0.5*reg*np.sum(W1*W1) + 0.5*reg*np.sum(W2*W2)
+    loss = data_loss + reg_loss
+
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -105,7 +126,21 @@ class TwoLayerNet(object):
     # and biases. Store the results in the grads dictionary. For example,       #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
-    pass
+    d_Z2 = (1./np.reshape(np.sum(exp_scores, 1),(-1,1))) * exp_scores/N 
+    d_Z2[np.arange(N),y] -= 1./N 
+    d_b2 = np.sum(d_Z2, 0)
+    d_W2 = np.dot(np.transpose(l1), d_Z2) + reg*W2
+    d_l1 = np.dot(d_Z2, np.transpose(W2))
+
+    d_Z1 = d_l1*(Z1>0)
+    d_b1 = np.sum(d_Z1, 0)
+    d_W1 = np.dot(np.transpose(X), d_Z1) + reg*W1
+
+    grads['W1'] = d_W1
+    grads['W2'] = d_W2
+    grads['b1'] = d_b1
+    grads['b2'] = d_b2
+ 
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -141,7 +176,7 @@ class TwoLayerNet(object):
     train_acc_history = []
     val_acc_history = []
 
-    for it in xrange(num_iters):
+    for it in range(num_iters):
       X_batch = None
       y_batch = None
 
