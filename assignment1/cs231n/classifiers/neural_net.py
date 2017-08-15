@@ -79,6 +79,7 @@ class TwoLayerNet(object):
     Z1 = np.dot(X, W1)+b1
     l1 = np.maximum(Z1, 0.0)    #activation function using relu
     scores = np.dot(l1, W2) + b2
+    
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -105,8 +106,8 @@ class TwoLayerNet(object):
     # reg_loss = 0.5*reg*np.sum(W1*W1) + 0.5*reg*np.sum(W2*W2)
     # loss = data_loss+reg_loss
 
-    #scores_normalize -= np.reshape(np.max(scores, 1),(-1,1))
-    exp_scores = np.exp(scores)
+    scores_normalize = scores- np.reshape(np.max(scores, 1),(-1,1))
+    exp_scores = np.exp(scores_normalize)
     probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True) # [N x C]
 
     # average cross-entropy loss and regularization
@@ -140,7 +141,7 @@ class TwoLayerNet(object):
     grads['W2'] = d_W2
     grads['b1'] = d_b1
     grads['b2'] = d_b2
- 
+
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -169,6 +170,7 @@ class TwoLayerNet(object):
     - verbose: boolean; if true print progress during optimization.
     """
     num_train = X.shape[0]
+    dim = X.shape[1]
     iterations_per_epoch = max(num_train / batch_size, 1)
 
     # Use SGD to optimize the parameters in self.model
@@ -184,7 +186,13 @@ class TwoLayerNet(object):
       # TODO: Create a random minibatch of training data and labels, storing  #
       # them in X_batch and y_batch respectively.                             #
       #########################################################################
-      pass
+      batch_index = np.random.choice(X.shape[0], batch_size)
+      X_batch = X[batch_index,:]
+      y_batch = y[batch_index,]
+
+      assert X_batch.shape == (batch_size, dim) 
+      assert y_batch.shape == (batch_size,)
+
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -199,7 +207,10 @@ class TwoLayerNet(object):
       # using stochastic gradient descent. You'll need to use the gradients   #
       # stored in the grads dictionary defined above.                         #
       #########################################################################
-      pass
+      self.params['W1'] -= learning_rate*grads['W1']
+      self.params['b1'] -= learning_rate*grads['b1']
+      self.params['W2'] -= learning_rate*grads['W2']
+      self.params['b2'] -= learning_rate*grads['b2']
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -244,7 +255,10 @@ class TwoLayerNet(object):
     ###########################################################################
     # TODO: Implement this function; it should be VERY simple!                #
     ###########################################################################
-    pass
+    Z1 = np.dot(X, self.params['W1'])+ self.params['b1']
+    l1 = np.maximum(Z1, 0.0)    #activation function using relu
+    scores = np.dot(l1, self.params['W2']) + self.params['b2']
+    y_pred = np.argmax(scores, axis=1)
     ###########################################################################
     #                              END OF YOUR CODE                           #
     ###########################################################################
