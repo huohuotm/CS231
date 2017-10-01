@@ -28,7 +28,7 @@ def affine_forward(x, w, b):
     N = x.shape[0]
     M = b.shape[0]
     x_reshaped = x.reshape(N,-1)
-    out = np.dot(x_reshaped, w) + b.reshape(-1, M)
+    out = np.dot(x_reshaped, w) + b #.reshape(-1, M)
     
     ###########################################################################
     #                             END OF YOUR CODE                            #
