@@ -110,7 +110,6 @@ def relu_backward(dout, cache):
     # TODO: Implement the ReLU backward pass.                                 #
     ###########################################################################
     dx = dout * np.ones((x.shape)) * (x > 0)
-       
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -163,7 +162,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     running_mean = bn_param.get('running_mean', np.zeros(D, dtype=x.dtype))
     running_var = bn_param.get('running_var', np.zeros(D, dtype=x.dtype))
 
-    out, cache = None, None
+    out, cache = None, {}
     if mode == 'train':
         #######################################################################
         # TODO: Implement the training-time forward pass for batch norm.      #
@@ -180,7 +179,23 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # variance, storing your result in the running_mean and running_var   #
         # variables.                                                          #
         #######################################################################
-        pass
+        sample_mean = np.mean(x, axis=0)
+        running_mean = momentum*running_mean + (1-momentum)*sample_mean
+
+        sample_var = np.var(x, axis=0, ddof=0)
+        running_var = momentum*running_var + (1-momentum)*sample_var
+
+        x_normalized=(x-sample_mean)/(np.sqrt(sample_var+eps))
+        out = x_normalized*gamma+beta
+    
+        cache['sample_mean'] = sample_mean
+        cache['sample_var'] = sample_var
+        cache['x_normalized'] = x_normalized
+        cache['x'] = x
+        cache['gamma'] = gamma
+        cache['beta'] = beta
+        cache['eps'] = eps 
+
         #######################################################################
         #                           END OF YOUR CODE                          #
         #######################################################################
@@ -191,7 +206,8 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # then scale and shift the normalized data using gamma and beta.      #
         # Store the result in the out variable.                               #
         #######################################################################
-        pass
+        x_normalized = (x-running_mean)/np.sqrt(running_var+eps)
+        out = x_normalized*gamma+beta
         #######################################################################
         #                          END OF YOUR CODE                           #
         #######################################################################
@@ -201,7 +217,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     # Store the updated running means back into bn_param
     bn_param['running_mean'] = running_mean
     bn_param['running_var'] = running_var
-
+ 
     return out, cache
 
 
@@ -227,11 +243,32 @@ def batchnorm_backward(dout, cache):
     # TODO: Implement the backward pass for batch normalization. Store the    #
     # results in the dx, dgamma, and dbeta variables.                         #
     ###########################################################################
-    pass
+
+    gamma = cache["gamma"] 
+    beta = cache["beta"]
+    sample_var = cache["sample_var"]
+    sample_mean = cache["sample_mean"]
+    eps = cache["eps"]
+    x = cache["x"]
+    x_normalized = cache["x_normalized"]
+    m = x.shape[0]
+
+
+    dbeta = np.sum(dout, axis=0, keepdims=True)
+    dgamma = np.sum(dout*x_normalized, axis=0, keepdims=True)
+    dx_normalized = dout*gamma
+
+    dvar_x = 2./m*(x-sample_mean)
+    dmean_x = 1./m
+    dvar_mean = np.sum(-2./m*(x-sample_mean), axis=0, keepdims=True)
+
+    dvar = np.sum(dx_normalized * ((cache['x']-cache['sample_mean']) * (-0.5) * (cache['sample_var'] + cache['eps'])**(-1.5)), axis=0)
+    dmean = np.sum(dx_normalized * (-1./np.sqrt(sample_var+eps)), axis=0) + dvar*dvar_mean  
+    dx = dx_normalized*(1./np.sqrt(sample_var+eps)) + dvar*dvar_x + dmean*dmean_x
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
-
     return dx, dgamma, dbeta
 
 
