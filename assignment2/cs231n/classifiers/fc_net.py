@@ -263,7 +263,7 @@ class FullyConnectedNet(object):
         fc_caches = {}
         relu_caches = {}
         batch_caches = {} 
-        drop_caches = {}
+        dropout_caches = {}
 
         scores = X # using "scores" to pass the intermediate result
         for l in range(1,self.num_layers+1):
@@ -274,6 +274,7 @@ class FullyConnectedNet(object):
             fc_cache = "fc_cache"+str(l)
             relu_cache = "relu_cache"+str(l)
             batch_cache = "batch_cache"+str(l)
+            dropout_cache = "dropout_cache"+str(l)
 
             if l == self.num_layers:
                 scores, fc_caches[fc_cache] = affine_forward(scores, self.params[w], self.params[b])
@@ -282,6 +283,9 @@ class FullyConnectedNet(object):
                 if self.use_batchnorm:
                     scores, batch_caches[batch_cache] = batchnorm_forward(scores, self.params[gamma], self.params[beta], self.bn_params[l-1])
                 scores, relu_caches[relu_cache] = relu_forward(scores)
+                if self.use_dropout:
+                    scores, dropout_caches[dropout_cache] = dropout_forward(scores, self.dropout_param) 
+
 
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -315,12 +319,15 @@ class FullyConnectedNet(object):
             fc_cache = "fc_cache"+str(l)
             relu_cache = "relu_cache"+str(l)
             batch_cache = "batch_cache"+str(l)
+            dropout_cache = "dropout_cache"+str(l)
 
             loss += 0.5*self.reg*np.sum(np.square(self.params[w]))
 
             if l == self.num_layers:
                 deriv, grads[w], grads[b] = affine_backward(deriv, fc_caches[fc_cache])
             else:
+                if self.use_dropout:
+                    deriv = dropout_backward(deriv, dropout_caches[dropout_cache])
                 deriv = relu_backward(deriv, relu_caches[relu_cache])
                 if self.use_batchnorm:
                     deriv, grads[gamma], grads[beta] = batchnorm_backward(deriv, batch_caches[batch_cache])
