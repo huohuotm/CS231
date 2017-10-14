@@ -165,6 +165,7 @@ class Solver(object):
         for p in self.model.params:
             d = {k: v for k, v in self.optim_config.items()}
             self.optim_configs[p] = d
+        
 
 
     def _step(self):
@@ -189,7 +190,7 @@ class Solver(object):
             next_w, next_config = self.update_rule(w, dw, config)
             self.model.params[p] = next_w
             self.optim_configs[p] = next_config
-
+            
 
     def _save_checkpoint(self):
         if self.checkpoint_name is None: return
@@ -269,6 +270,7 @@ class Solver(object):
             if self.verbose and t % self.print_every == 0:
                 print('(Iteration %d / %d) loss: %f' % (
                        t + 1, num_iterations, self.loss_history[-1]))
+
 
             # At the end of every epoch, increment the epoch counter and decay
             # the learning rate.
