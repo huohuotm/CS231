@@ -15,9 +15,9 @@ This repository contains assignments of Stanford course CS231n: Convolutional Ne
 
 ### TODO
 
-- [ ] Lectures1-9
-- [ ] Assignment1
-- [ ] Assignment2
+- [x]  Lectures1-9
+- [x]  Assignment1
+- [x]  Assignment2
 - [ ] Lecture10 RNN
 - [ ] Lecture13 Generative Models 
 - [ ] Lecture14: Deep Reinforcement Learning  
